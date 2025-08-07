@@ -1,189 +1,128 @@
--- Control Europe GUI Ultimate | By Ahmed
--- تشمل الواجهة كل الأوامر: جيش، تحالف، حرب (تبرير/إعلان), Anti‑AFK
-
+-- Control Europe GUI by Ahmed 🛡️
 local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
-local Replicated = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 -- Anti-AFK
 pcall(function()
     local vu = game:GetService("VirtualUser")
-    Player.Idled:Connect(function()
-        vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    game:GetService("Players").LocalPlayer.Idled:Connect(function()
+        vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
         wait(1)
-        vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
     end)
 end)
 
--- الدول الأوروبية (اختصار)
+-- UI Setup
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.Name = "ControlEuropeGUI"
+gui.ResetOnSpawn = false
+
+local openButton = Instance.new("TextButton", gui)
+openButton.Size = UDim2.new(0, 120, 0, 30)
+openButton.Position = UDim2.new(0, 10, 0, 10)
+openButton.Text = "فتح القائمة"
+openButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+openButton.TextColor3 = Color3.new(1, 1, 1)
+openButton.Font = Enum.Font.SourceSansBold
+openButton.TextScaled = true
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 400, 0, 300)
+frame.Position = UDim2.new(0.5, -200, 0.5, -150)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.Visible = false
+frame.Active = true
+frame.Draggable = true
+
+local watermark = Instance.new("TextLabel", frame)
+watermark.Size = UDim2.new(1, 0, 0, 25)
+watermark.Position = UDim2.new(0, 0, 0, 0)
+watermark.Text = "Control Europe GUI | by Ahmed 🛡️"
+watermark.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+watermark.TextColor3 = Color3.new(1, 1, 1)
+watermark.Font = Enum.Font.SourceSansBold
+watermark.TextScaled = true
+
+-- Dropdown
 local countries = {
-    "Albania","Andorra","Austria","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria",
-    "Croatia","Czechia","Denmark","Estonia","Finland","France","Germany","Greece","Hungary",
-    "Iceland","Ireland","Italy","Kosovo","Latvia","Liechtenstein","Lithuania","Luxembourg",
-    "Malta","Moldova","Monaco","Montenegro","Netherlands","North Macedonia","Norway","Poland",
-    "Portugal","Romania","San Marino","Serbia","Slovakia","Slovenia","Spain","Sweden","Switzerland",
-    "Ukraine","United Kingdom","Vatican City"
+    "France", "Germany", "Italy", "Spain", "United Kingdom", "Poland", "Netherlands",
+    "Belgium", "Switzerland", "Austria", "Sweden", "Norway", "Finland", "Denmark",
+    "Czech Republic", "Slovakia", "Hungary", "Romania", "Bulgaria", "Greece",
+    "Portugal", "Ireland", "Ukraine", "Russia", "Serbia", "Croatia", "Slovenia", "Albania",
+    "Lithuania", "Latvia", "Estonia", "Moldova", "Bosnia", "North Macedonia", "Montenegro"
 }
 
--- Build GUI
-local screen = Instance.new("ScreenGui", PlayerGui)
-screen.Name = "ControlEuropeGUI"
+local dropdown = Instance.new("TextButton", frame)
+dropdown.Size = UDim2.new(0.9, 0, 0, 30)
+dropdown.Position = UDim2.new(0.05, 0, 0.15, 0)
+dropdown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+dropdown.TextColor3 = Color3.new(1, 1, 1)
+dropdown.Font = Enum.Font.SourceSans
+dropdown.Text = "اختار الدولة"
+dropdown.TextScaled = true
 
-local frame = Instance.new("Frame", screen)
-frame.Size = UDim2.new(0, 360, 0, 490)
-frame.Position = UDim2.new(0.5, -180, 0.5, -245)
-frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
-frame.Active, frame.Draggable = true, true
+local selectedCountry = nil
 
--- Watermark
-local wm = Instance.new("TextLabel", frame)
-wm.Size = UDim2.new(1,0,0,25)
-wm.Position = UDim2.new(0,0,1,-25)
-wm.BackgroundTransparency = 1
-wm.Text = "Control Europe GUI by Ahmed"
-wm.TextColor3 = Color3.fromRGB(200,200,200)
-wm.TextScaled = true
-wm.Font = Enum.Font.SourceSansBold
+local dropFrame = Instance.new("Frame", frame)
+dropFrame.Size = UDim2.new(0.9, 0, 0, #countries * 20)
+dropFrame.Position = dropdown.Position + UDim2.new(0, 0, 0, 30)
+dropFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+dropFrame.Visible = false
+dropFrame.ClipsDescendants = true
+dropFrame.ZIndex = 5
 
--- Hide/Show toggle
-local toggle = Instance.new("TextButton", screen)
-toggle.Size = UDim2.new(0, 100, 0, 30)
-toggle.Position = UDim2.new(0.9, -50, 0.05, 0)
-toggle.Text = "Hide GUI"
-toggle.Font = Enum.Font.SourceSansBold
-toggle.TextScaled = true
-toggle.BackgroundColor3 = Color3.fromRGB(60,60,60)
-toggle.TextColor3 = Color3.new(1,1,1)
-toggle.MouseButton1Click:Connect(function()
-    frame.Visible = not frame.Visible
-    toggle.Text = frame.Visible and "Hide GUI" or "Show GUI"
-end)
-
--- Title
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1,0,0,30)
-title.Text = "Control Europe Hub"
-title.Font = Enum.Font.SourceSansBold
-title.TextScaled = true
-title.TextColor3 = Color3.new(1,1,1)
-title.BackgroundColor3 = Color3.fromRGB(55,10,80)
-
--- Helper
-local function createDropdown(list, ypos, placeholder)
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0.9,0,0,30)
-    btn.Position = UDim2.new(0.05,0,ypos,0)
-    btn.Text = placeholder
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextScaled = true
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-
-    local container = Instance.new("Frame", btn)
-    container.Size = UDim2.new(1,0,0,#list*25)
-    container.Position = UDim2.new(0,0,1,0)
-    container.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    container.Visible = false
-    container.ClipsDescendants = true
-
-    local selected = nil
-    for i,v in ipairs(list) do
-        local opt = Instance.new("TextButton", container)
-        opt.Size = UDim2.new(1,0,0,25)
-        opt.Position = UDim2.new(0,0,(i-1)*25,0)
-        opt.Text = v
-        opt.Font = Enum.Font.SourceSans
-        opt.TextScaled = true
-        opt.TextColor3 = Color3.new(1,1,1)
-        opt.BackgroundColor3 = Color3.fromRGB(70,70,70)
-        opt.MouseButton1Click:Connect(function()
-            selected = v
-            btn.Text = v
-            container.Visible = false
-        end)
-    end
-    btn.MouseButton1Click:Connect(function()
-        container.Visible = not container.Visible
+for _, country in pairs(countries) do
+    local option = Instance.new("TextButton", dropFrame)
+    option.Size = UDim2.new(1, 0, 0, 20)
+    option.Text = country
+    option.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    option.TextColor3 = Color3.new(1, 1, 1)
+    option.Font = Enum.Font.SourceSans
+    option.TextScaled = true
+    option.MouseButton1Click:Connect(function()
+        selectedCountry = country
+        dropdown.Text = "📍 " .. country
+        dropFrame.Visible = false
     end)
-    return function() return selected end
 end
 
-local getCountry = createDropdown(countries, 0.15, "Select Country")
-local cityDropdownBtn = Instance.new("TextButton", frame)
-cityDropdownBtn.Size = UDim2.new(0.9,0,0,30)
-cityDropdownBtn.Position = UDim2.new(0.05,0,0.27,0)
-cityDropdownBtn.Text = "Select Country First"
-cityDropdownBtn.Font = Enum.Font.SourceSansBold
-cityDropdownBtn.TextScaled = true
-cityDropdownBtn.TextColor3 = Color3.new(1,1,1)
-cityDropdownBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-local getCity = function() return cityDropdownBtn.Text ~= "Select Country First" and cityDropdownBtn.Text or nil end
+dropdown.MouseButton1Click:Connect(function()
+    dropFrame.Visible = not dropFrame.Visible
+end)
 
-cityDropdownBtn.MouseButton1Click:Connect(function()
-    local c = getCountry()
-    if c and Workspace.Regions:FindFirstChild(c) then
-        cityDropdownBtn.Text = c
+-- Justify War
+local justifyBtn = Instance.new("TextButton", frame)
+justifyBtn.Size = UDim2.new(0.4, 0, 0, 30)
+justifyBtn.Position = UDim2.new(0.05, 0, 0.45, 0)
+justifyBtn.Text = "تبرير حرب"
+justifyBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 0)
+justifyBtn.TextColor3 = Color3.new(1,1,1)
+justifyBtn.Font = Enum.Font.SourceSansBold
+justifyBtn.TextScaled = true
+justifyBtn.MouseButton1Click:Connect(function()
+    if selectedCountry then
+        ReplicatedStorage:WaitForChild("RemoteEvent_2"):FireServer("JustifyWar", selectedCountry)
     end
 end)
 
-local unitTypes = {"Soldier","Tank","Artillery","AntiAir","Ship"}
-local getUnit = createDropdown(unitTypes, 0.35, "Select Unit Type")
-
-local countBox = Instance.new("TextBox", frame)
-countBox.Size = UDim2.new(0.9,0,0,30)
-countBox.Position = UDim2.new(0.05,0,0.45,0)
-countBox.PlaceholderText = "Unit Count"
-countBox.Font = Enum.Font.SourceSans
-countBox.TextScaled = true
-countBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
-countBox.TextColor3 = Color3.new(1,1,1)
-
-local function createButton(txt,ypos,color,callback)
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0.9,0,0,30)
-    btn.Position = UDim2.new(0.05,0,ypos,0)
-    btn.Text = txt
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextScaled = true
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.BackgroundColor3 = color
-    btn.MouseButton1Click:Connect(callback)
-end
-
-createButton("Create Army", 0.55, Color3.fromRGB(0,120,0), function()
-    local c = getCountry(); local city = getCity(); local u = getUnit(); local num = tonumber(countBox.Text)
-    if c and city and u and num and num>0 then
-        local ev = Replicated:FindFirstChild("RemoteEvent_4")
-        local tile = Workspace.Regions and Workspace.Regions:FindFirstChild(city)
-        if ev and tile then
-            ev:FireServer("CreateArmyOnTile", tile, u, num)
-        end
+-- Declare War
+local declareBtn = Instance.new("TextButton", frame)
+declareBtn.Size = UDim2.new(0.4, 0, 0, 30)
+declareBtn.Position = UDim2.new(0.55, 0, 0.45, 0)
+declareBtn.Text = "إعلان حرب"
+declareBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+declareBtn.TextColor3 = Color3.new(1,1,1)
+declareBtn.Font = Enum.Font.SourceSansBold
+declareBtn.TextScaled = true
+declareBtn.MouseButton1Click:Connect(function()
+    if selectedCountry then
+        ReplicatedStorage:WaitForChild("RemoteEvent_3"):FireServer("DeclareWar", selectedCountry)
     end
 end)
 
-createButton("Form Ally", 0.65, Color3.fromRGB(0,0,200), function()
-    local c = getCountry()
-    if c then for _,evn in ipairs({"RemoteEvent_1","RemoteEvent_4"}) do
-            local ev = Replicated:FindFirstChild(evn)
-            if ev then ev:FireServer("FormAlly",c) end
-        end
-    end
-end)
-
-createButton("Justify War", 0.75, Color3.fromRGB(200,200,0), function()
-    local c = getCountry()
-    if c then
-        local ev = Replicated:FindFirstChild("RemoteEvent_2")
-        if ev then ev:FireServer("JustifyWar",c) end
-    end
-end)
-
-createButton("Declare War", 0.85, Color3.fromRGB(200,0,0), function()
-    local c = getCountry()
-    if c then
-        local ev = Replicated:FindFirstChild("RemoteEvent_3")
-        if ev then ev:FireServer("DeclareWar",c) end
-    end
+-- Toggle GUI
+openButton.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
 end)
